@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class Order extends Model
 {
@@ -32,6 +33,15 @@ class Order extends Model
         static::creating(function (Order $order) {
             $order->public_token = (string) Str::uuid();
         });
+    }
+
+    public function getReferenceImageAttribute(?string $value): ?string
+    {
+        if (!$value) {
+            return null;
+        }
+
+        return asset('storage/' . $value);
     }
 
     public function user()
