@@ -82,8 +82,13 @@ class OrderController extends Controller
         $this->authorizeOrder($request, $order);
 
         $data = $request->validate([
+            // ✅ CORREÇÃO: 'rejected' estava ausente da lista de status permitidos.
+            // Mover um card para a coluna "Rejeitado" no Kanban retornava 422
+            // silenciosamente enquanto o frontend já havia atualizado o estado
+            // de forma otimista — o card aparecia como rejeitado na UI mas
+            // nunca era salvo no banco.
             'status' => ['required', Rule::in([
-                'budget', 'approved', 'printing', 'done', 'delivered',
+                'budget', 'approved', 'printing', 'done', 'delivered', 'rejected',
             ])],
         ]);
 
