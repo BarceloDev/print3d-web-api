@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PublicOrderController;
 use Illuminate\Support\Facades\Route;
@@ -27,5 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('clients', ClientController::class)->except(['show']);
         Route::apiResource('orders',  OrderController::class);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus']);
+
+        Route::get('dashboard/charts', [DashboardController::class, 'charts']);
     });
 });
