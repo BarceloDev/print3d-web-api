@@ -18,6 +18,7 @@ class Order extends Model
         'status',
         'public_token',
         'reference_image',
+        'delivered_at',
     ];
 
     protected function casts(): array
@@ -25,6 +26,7 @@ class Order extends Model
         return [
             'price' => 'decimal:2',
             'deadline' => 'date:Y-m-d',
+            'delivered_at' => 'datetime',
         ];
     }
 
@@ -32,6 +34,12 @@ class Order extends Model
     {
         static::creating(function (Order $order) {
             $order->public_token = (string) Str::uuid();
+        });
+
+        static::updating(function (Order $order) {
+            if ($order->isDirty('status') && $order->status === 'delivered') {
+                $order->delivered_at = now();
+            }
         });
     }
 
