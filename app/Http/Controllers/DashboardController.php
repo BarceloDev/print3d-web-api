@@ -44,8 +44,6 @@ class DashboardController extends Controller
             ->where('status', 'delivered')
             ->whereNotNull('delivered_at')
             ->whereBetween('delivered_at', [
-                // BUG CORRIGIDO: copy() antes de startOfDay/endOfDay
-                // para não mutar o objeto Carbon original
                 $days->first()->copy()->startOfDay(),
                 $today->copy()->endOfDay(),
             ])
@@ -85,7 +83,6 @@ class DashboardController extends Controller
             ->where('status', 'delivered')
             ->whereNotNull('delivered_at')
             ->whereBetween('delivered_at', [
-                // BUG CORRIGIDO: mesmo problema de mutação
                 $days->first()->copy()->startOfDay(),
                 $today->copy()->endOfDay(),
             ])
@@ -123,12 +120,14 @@ class DashboardController extends Controller
             ->where('status', 'delivered')
             ->whereNotNull('delivered_at')
             ->whereBetween('delivered_at', [
-                // BUG CORRIGIDO: copy() para não mutar $months->first()
                 $months->first()->copy()->startOfMonth(),
                 $thisMonth->copy()->endOfMonth(),
             ])
             ->select(
-                DB::raw("TO_CHAR(delivered_at, 'YYYY-MM') as month"),
+                // ✅ CORREÇÃO: TO_CHAR() é exclusivo do PostgreSQL/Oracle e causava
+                // erro de SQL fatal quando o banco é MySQL (padrão no Render).
+                // Substituído por DATE_FORMAT(), que é a função equivalente no MySQL.
+                DB::raw("DATE_FORMAT(delivered_at, '%Y-%m') as month"),
                 DB::raw("SUM(price) as total_revenue"),
                 DB::raw("COUNT(*) as total_orders"),
             )
