@@ -1,186 +1,87 @@
-# Print3D Web API
+# 🖨️ Print3D Web API
 
-API REST desenvolvida em Laravel para gerenciamento de clientes, pedidos e orçamentos para serviços de impressão 3D.
-
----
-
-## Tecnologias
-
-- PHP 8+
-- Laravel 12
-- Laravel Sanctum
-- MySQL/PostgreSQL
-- REST API
+API REST desenvolvida em Laravel para gerenciamento de clientes, pedidos e acompanhamento do fluxo de produção de impressões 3D.
 
 ---
 
-## Funcionalidades
+## ✨ Funcionalidades
 
-### Autenticação
+### 🔐 Autenticação
 
-- Cadastro de usuários
+- Registro de usuários
 - Login
 - Logout
-- Consulta do usuário autenticado
+- Recuperação do usuário autenticado
 
-### Clientes
+### 👥 Clientes
 
-- Criar cliente
-- Listar clientes
-- Atualizar cliente
-- Excluir cliente
+- Cadastro
+- Atualização
+- Remoção
+- Listagem
 
-### Pedidos
+### 📦 Pedidos
 
-- Criar pedido
-- Listar pedidos
-- Atualizar pedido
-- Excluir pedido
-- Alterar status
-- Upload de imagem
+- Cadastro de pedidos
+- Atualização
+- Exclusão
+- Alteração de status
+- Upload de arquivos
+- Aprovação pelo cliente
+- Rejeição pelo cliente
 
-### Aprovação Pública
+### 📊 Dashboard
 
-- Visualização de orçamento por token
-- Aprovação de orçamento
-- Recusa de orçamento
+- Métricas operacionais
+- Indicadores
+- Gráficos
 
 ---
 
-# Instalação
+## 🛠️ Tecnologias Utilizadas
 
-## Clonar o projeto
+### Backend
 
-```bash
-git clone https://github.com/seu-usuario/print3d-web-api.git
-```
+- PHP 8.2+
+- Laravel 12
+- Laravel Sanctum
 
-## Entrar na pasta
+### Banco de Dados
 
-```bash
-cd print3d-web-api
-```
+- PostgreSQL
 
-## Instalar dependências
+### Armazenamento
 
-```bash
-composer install
-```
+- Laravel Storage
 
-## Copiar arquivo de ambiente
+---
 
-```bash
-cp .env.example .env
-```
+## 📂 Estrutura do Projeto
 
-## Gerar chave da aplicação
+```text
+app/
+├── Http/
+│   ├── Controllers/
+│   └── Middleware/
+├── Models/
+└── Providers/
 
-```bash
-php artisan key:generate
-```
+database/
+├── migrations/
+├── factories/
+└── seeders/
 
-## Configurar banco de dados
-
-Edite o arquivo `.env`
-
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=print3d
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-## Executar migrations
-
-```bash
-php artisan migrate
-```
-
-## Criar link do storage
-
-```bash
-php artisan storage:link
-```
-
-## Iniciar servidor
-
-```bash
-php artisan serve
+routes/
+└── api.php
 ```
 
 ---
 
-# Autenticação
+## 🔐 Autenticação
 
-## Registrar usuário
+A autenticação é realizada utilizando Laravel Sanctum.
 
-### Endpoint
-
-```http
-POST /api/register
-```
-
-### Body
-
-```json
-{
-    "name": "João Silva",
-    "email": "joao@email.com",
-    "password": "12345678",
-    "password_confirmation": "12345678"
-}
-```
-
-### Resposta
-
-```json
-{
-    "user": {},
-    "token": "TOKEN"
-}
-```
-
----
-
-## Login
-
-### Endpoint
-
-```http
-POST /api/login
-```
-
-### Body
-
-```json
-{
-    "email": "joao@email.com",
-    "password": "12345678"
-}
-```
-
-### Resposta
-
-```json
-{
-    "token": "TOKEN",
-    "user": {}
-}
-```
-
----
-
-## Logout
-
-### Endpoint
-
-```http
-POST /api/logout
-```
-
-### Headers
+Exemplo de header:
 
 ```http
 Authorization: Bearer TOKEN
@@ -188,192 +89,150 @@ Authorization: Bearer TOKEN
 
 ---
 
-# Clientes
+## 📡 Principais Endpoints
 
-## Listar clientes
-
-```http
-GET /api/clients
-```
-
-## Criar cliente
+### Autenticação
 
 ```http
-POST /api/clients
+POST /api/register
+POST /api/login
+POST /api/logout
+GET /api/me
 ```
 
-### Body
-
-```json
-{
-    "name": "Empresa XPTO",
-    "email": "contato@empresa.com",
-    "phone": "(11)99999-9999"
-}
-```
-
-## Atualizar cliente
+### Clientes
 
 ```http
-PUT /api/clients/{id}
-```
-
-## Remover cliente
-
-```http
+GET    /api/clients
+POST   /api/clients
+PUT    /api/clients/{id}
 DELETE /api/clients/{id}
 ```
 
----
-
-# Pedidos
-
-## Listar pedidos
+### Pedidos
 
 ```http
-GET /api/orders
-```
-
-## Buscar pedido
-
-```http
-GET /api/orders/{id}
-```
-
-## Criar pedido
-
-```http
-POST /api/orders
-```
-
-### FormData
-
-```text
-client_id
-title
-description
-price
-deadline
-reference_image
-```
-
-## Atualizar pedido
-
-```http
-PUT /api/orders/{id}
-```
-
-## Excluir pedido
-
-```http
+GET    /api/orders
+POST   /api/orders
+PUT    /api/orders/{id}
 DELETE /api/orders/{id}
+PATCH  /api/orders/{id}/status
 ```
 
-## Atualizar status
+### Dashboard
 
 ```http
-PATCH /api/orders/{id}/status
+GET /api/dashboard/charts
 ```
 
-### Body
-
-```json
-{
-    "status": "printing"
-}
-```
-
----
-
-# Status Disponíveis
-
-```text
-budget
-approved
-printing
-done
-delivered
-rejected
-```
-
-Fluxo:
-
-```text
-budget
-  ↓
-approved
-  ↓
-printing
-  ↓
-done
-  ↓
-delivered
-```
-
-ou
-
-```text
-budget
-  ↓
-rejected
-```
-
----
-
-# Rotas Públicas
-
-## Visualizar orçamento
+### Aprovação Pública
 
 ```http
-GET /api/public/orders/{token}
-```
-
-## Aprovar orçamento
-
-```http
+GET   /api/public/orders/{token}
 PATCH /api/public/orders/{token}/approve
-```
-
-## Recusar orçamento
-
-```http
 PATCH /api/public/orders/{token}/reject
 ```
 
 ---
 
-# Middleware de Assinatura
+## ⚙️ Configuração
 
-A API possui um middleware responsável por verificar se o usuário possui assinatura ativa.
+Copie o arquivo de exemplo:
 
-Caso a assinatura esteja inativa:
+```bash
+cp .env.example .env
+```
 
-```json
-{
-    "message": "Assinatura inativa. Renove seu plano para continuar."
-}
+Configure o PostgreSQL:
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=print3d_web_api
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha
 ```
 
 ---
 
-# Estrutura da API
+## 🚀 Instalação
+
+Clone o repositório:
+
+```bash
+git clone https://github.com/BarceloDev/print3d-web-api.git
+```
+
+Entre na pasta:
+
+```bash
+cd print3d-web-api
+```
+
+Instale as dependências:
+
+```bash
+composer install
+```
+
+Gere a chave da aplicação:
+
+```bash
+php artisan key:generate
+```
+
+Execute as migrations:
+
+```bash
+php artisan migrate
+```
+
+Crie o link simbólico para uploads:
+
+```bash
+php artisan storage:link
+```
+
+Inicie o servidor:
+
+```bash
+php artisan serve
+```
+
+Servidor local:
 
 ```text
-Frontend
-    ↓
-Laravel Sanctum
-    ↓
-Middleware Plan Active
-    ↓
-Controllers
-    ↓
-Models
-    ↓
-Database
+http://localhost:8000
 ```
 
 ---
 
-# Licença
+## 🐳 Docker
 
-Projeto desenvolvido para gerenciamento de serviços de impressão 3D.
+O projeto possui suporte a Docker através do arquivo:
+
+```text
+Dockerfile
+```
+
+---
+
+## 🔗 Frontend
+
+Frontend oficial:
+
+https://github.com/BarceloDev/print3d
+
+---
+
+## 👨‍💻 Autor
+
+**Guilherme Barcelo**
+
+- LinkedIn: https://www.linkedin.com/in/guilherme-barcelo
+- Instagram: https://www.instagram.com/guibarcelo_
+
+---
+
+API desenvolvida para gerenciamento de operações de impressão 3D.
