@@ -29,6 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('orders',  OrderController::class);
         Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus']);
 
+        // MUDANÇA: adicionada rota de stats separada do charts.
+        // O Dashboard usa /stats para métricas agregadas (sem carregar pedidos)
+        // e /charts apenas para os gráficos de linha/funil.
+        Route::get('dashboard/stats',  [DashboardController::class, 'stats']);
         Route::get('dashboard/charts', [DashboardController::class, 'charts']);
     });
 });

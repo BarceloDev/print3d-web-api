@@ -11,6 +11,68 @@ use Illuminate\Support\Facades\DB;
 class DashboardController extends Controller
 {
     /**
+     * GET /api/dashboard/stats
+     *
+     * MUDANÇA: endpoint novo. Retorna métricas agregadas do dashboard
+     * (contagens por status + receita total) sem enviar nenhuma linha de
+     * pedido para o frontend.
+     *
+     * Antes, o Dashboard.tsx chamava getOrders() e calculava totais no
+     * JavaScript — carregando TODOS os pedidos só para somar. Com muitos
+     * pedidos entregues isso ficaria lento. Agora o banco faz a agregação
+     * e o frontend recebe apenas números.
+     *
+     * Resposta:
+     * {
+     *   total_orders: 45,
+     *   open_orders: 12,       // todos exceto delivered e rejected
+     *   delivered_orders: 28,
+     *   rejected_orders: 5,
+     *   total_revenue: 15430.00,
+     *   by_status: { budget: 2, approved: 3, ... }
+     * }
+     */
+    public function stats(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        // Uma única query agrupa todos os status de uma vez.
+        $counts = Order::where('user_id', $userId)
+            ->select('status', DB::raw('COUNT(*) as total'))
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+
+        // Receita: soma do preço apenas de pedidos entregues.
+        $revenue = (float) Order::where('user_id', $userId)
+            ->where('status', 'delivered')
+            ->sum('price');
+
+        $statuses = ['budget', 'approved', 'printing', 'done', 'delivered', 'rejected'];
+
+        $byStatus = [];
+        foreach ($statuses as $status) {
+            $byStatus[$status] = isset($counts[$status])
+                ? (int) $counts[$status]->total
+                : 0;
+        }
+
+        $total     = array_sum($byStatus);
+        $delivered = $byStatus['delivered'];
+        $rejected  = $byStatus['rejected'];
+        $open      = $total - $delivered - $rejected;
+
+        return response()->json([
+            'total_orders'    => $total,
+            'open_orders'     => $open,
+            'delivered_orders'=> $delivered,
+            'rejected_orders' => $rejected,
+            'total_revenue'   => $revenue,
+            'by_status'       => $byStatus,
+        ]);
+    }
+
+    /**
      * GET /api/dashboard/charts?range=7d|30d|12m
      */
     public function charts(Request $request): JsonResponse
@@ -124,9 +186,6 @@ class DashboardController extends Controller
                 $thisMonth->copy()->endOfMonth(),
             ])
             ->select(
-                // ✅ CORREÇÃO: TO_CHAR() é exclusivo do PostgreSQL/Oracle e causava
-                // erro de SQL fatal quando o banco é MySQL (padrão no Render).
-                // Substituído por DATE_FORMAT(), que é a função equivalente no MySQL.
                 DB::raw("DATE_FORMAT(delivered_at, '%Y-%m') as month"),
                 DB::raw("SUM(price) as total_revenue"),
                 DB::raw("COUNT(*) as total_orders"),

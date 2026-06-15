@@ -9,15 +9,50 @@ use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
+    /**
+     * GET /api/orders
+     *
+     * Parâmetros opcionais:
+     *  - status    : filtra por status (usado pelo Kanban por coluna)
+     *  - per_page  : ativa paginação e define quantos itens por página
+     *  - page      : número da página (default 1, relevante só com per_page)
+     *
+     * MUDANÇA: antes retornava sempre todos os pedidos em um array plano.
+     * Agora suporta dois modos:
+     *   • Sem per_page → comportamento original (array plano, compatibilidade)
+     *   • Com per_page → retorna objeto paginado do Laravel:
+     *     { current_page, data, last_page, per_page, total, ... }
+     *
+     * O Kanban chama GET /orders?status=printing&per_page=5&page=1
+     * para carregar 5 pedidos por coluna.
+     */
     public function index(Request $request): JsonResponse
     {
-        $orders = $request->user()
+        $query = $request->user()
             ->orders()
             ->with('client')
-            ->orderByDesc('created_at')
-            ->get();
+            ->orderByDesc('created_at');
 
-        return response()->json($orders);
+        // MUDANÇA: filtro por status adicionado (necessário para carregar
+        // cada coluna do Kanban de forma independente).
+        if ($request->filled('status')) {
+            $request->validate([
+                'status' => Rule::in([
+                    'budget', 'approved', 'printing', 'done', 'delivered', 'rejected',
+                ]),
+            ]);
+            $query->where('status', $request->status);
+        }
+
+        // MUDANÇA: paginação adicionada. Sem per_page retorna array plano
+        // (mantém compatibilidade com chamadas legadas — ex: getRecentOrders).
+        $perPage = (int) $request->get('per_page', 0);
+        if ($perPage > 0) {
+            $perPage = min($perPage, 100); // cap de segurança
+            return response()->json($query->paginate($perPage));
+        }
+
+        return response()->json($query->get());
     }
 
     public function store(Request $request): JsonResponse
@@ -82,11 +117,6 @@ class OrderController extends Controller
         $this->authorizeOrder($request, $order);
 
         $data = $request->validate([
-            // ✅ CORREÇÃO: 'rejected' estava ausente da lista de status permitidos.
-            // Mover um card para a coluna "Rejeitado" no Kanban retornava 422
-            // silenciosamente enquanto o frontend já havia atualizado o estado
-            // de forma otimista — o card aparecia como rejeitado na UI mas
-            // nunca era salvo no banco.
             'status' => ['required', Rule::in([
                 'budget', 'approved', 'printing', 'done', 'delivered', 'rejected',
             ])],
