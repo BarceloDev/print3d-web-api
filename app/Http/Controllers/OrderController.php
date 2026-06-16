@@ -116,9 +116,12 @@ class OrderController extends Controller
     {
         $this->authorizeOrder($request, $order);
 
+        // 'approved' é INTENCIONALMENTE excluído da lista.
+        // Somente o cliente pode aprovar um orçamento, via link público
+        // (PublicOrderController::approve) — o vendedor não tem permissão.
         $data = $request->validate([
             'status' => ['required', Rule::in([
-                'budget', 'approved', 'printing', 'done', 'delivered', 'rejected',
+                'budget', 'printing', 'done', 'delivered', 'rejected',
             ])],
         ]);
 
