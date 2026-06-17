@@ -45,11 +45,8 @@ class Order extends Model
 
     public function getReferenceImageAttribute(?string $value): ?string
     {
-        if (!$value) {
-            return null;
-        }
-
-        return asset('storage/' . $value);
+        if (!$value) return null;
+        return Storage::url($value); // ← usa o driver configurado no .env
     }
 
     public function user()
