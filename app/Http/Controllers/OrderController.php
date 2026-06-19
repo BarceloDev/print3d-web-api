@@ -69,7 +69,7 @@ class OrderController extends Controller
         if ($request->hasFile('reference_image')) {
             $data['reference_image'] = $request
                 ->file('reference_image')
-                ->store('orders', 'public');
+                ->store('orders', 's3');
         }
 
         $data['user_id'] = $request->user()->id;
@@ -103,7 +103,7 @@ class OrderController extends Controller
         if ($request->hasFile('reference_image')) {
             $data['reference_image'] = $request
                 ->file('reference_image')
-                ->store('orders', 'public');
+                ->store('orders', 's3');
         }
 
         $order->update($data);
